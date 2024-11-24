@@ -2,14 +2,6 @@
 import pandas as pd
 from finvader import finvader                         
 
-# from transformers import BertTokenizer, BertForSequenceClassification
-# from transformers import pipeline
-
-# model_name = 'ProsusAI/finbert'
-# tokenizer = BertTokenizer.from_pretrained(model_name)
-# model = BertForSequenceClassification.from_pretrained(model_name)
-# finbert_pipeline = pipeline("sentiment-analysis", model=model, tokenizer=tokenizer)
-
 #VADER Scores
 # positive sentiment: compound score >= 0.05
 # neutral sentiment: (compound score > -0.05) and (compound score < 0.05)
