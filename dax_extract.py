@@ -3,10 +3,6 @@ from bs4 import BeautifulSoup
 import csv
 from datetime import datetime
 
-urls = [
-    "https://www.fxempire.com/indices/de30-eur/news"
-]
-
 def extract_dax_news_from_url(url):
     dax_news = []
     headers = {
@@ -16,12 +12,9 @@ def extract_dax_news_from_url(url):
     response.raise_for_status()
     soup = BeautifulSoup(response.content, 'html.parser')
     articles = soup.find_all('a', href=True)
-    
-    
     for article in articles:
         
         title = article.get_text(strip=True)
-
         date_tag = article.find_parent('article').find('time') if article.find_parent('article') else None
         publish_date = None
         
@@ -53,11 +46,16 @@ with open(csv_file, 'a', newline='', encoding='utf-8') as csvfile:
     if not file_exists:
         writer.writeheader()
 
-    for url in urls:
+    url_main_1 = 'https://www.investing.com/indices/germany-30-news/'
+    for i in range(1,101):
+        url = url_main_1 + str(i)
         print(f"Scraping news from {url}...")
         dax_news = extract_dax_news_from_url(url)
-        
         for news in dax_news:
-            writer.writerow({'date': news['publish_date'], 'title': news['title']})
+            if(len(news['title']) > 10):
+                writer.writerow({'date': news['publish_date'], 'title': news['title']})
 
 print(f"All DAX-related articles have been saved to '{csv_file}'.")
+
+#https://www.tradingview.com/news-flow/?symbol=XETR:DAX
+#rate limit w/ rand interval
