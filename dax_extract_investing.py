@@ -31,7 +31,7 @@ def extract_dax_news_from_url(url):
 
     return dax_news
 
-csv_file = 'dax_news.csv'
+csv_file = 'dax_investing.csv'
 file_exists = False
 try:
     with open(csv_file, 'r', newline='', encoding='utf-8'):
@@ -46,16 +46,12 @@ with open(csv_file, 'a', newline='', encoding='utf-8') as csvfile:
     if not file_exists:
         writer.writeheader()
 
-    url_main_1 = 'https://www.investing.com/indices/germany-30-news/'
+    url_main = 'https://www.investing.com/indices/germany-30-news/'
     for i in range(1,101):
-        url = url_main_1 + str(i)
+        url = url_main + str(i)
         print(f"Scraping news from {url}...")
         dax_news = extract_dax_news_from_url(url)
         for news in dax_news:
             if(len(news['title']) > 10):
                 writer.writerow({'date': news['publish_date'], 'title': news['title']})
-
 print(f"All DAX-related articles have been saved to '{csv_file}'.")
-
-#https://www.tradingview.com/news-flow/?symbol=XETR:DAX
-#rate limit w/ rand interval
