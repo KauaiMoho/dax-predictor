@@ -4,20 +4,9 @@ from sklearn.preprocessing import StandardScaler
 from keras.models import Sequential
 from keras.layers import LSTM, Bidirectional, Dense, Dropout
 
-model = Sequential()
+from tensorflow.python.client import device_lib
+print(device_lib.list_local_devices())
 
-# Add a bidirectional LSTM layer
-model.add(Bidirectional(LSTM(64, return_sequences=True), input_shape=(X_train.shape[1], X_train.shape[2]))) # FIX SHAPE
-model.add(Dropout(0.2))  # Regularization to prevent overfitting
-
-# Add another LSTM layer
-model.add(Bidirectional(LSTM(32)))
-model.add(Dropout(0.2))
-
-# Fully connected layer for output
-model.add(Dense(1))
-
-model.compile(optimizer='adam', loss='mean_squared_error')
 sentiment = pd.read_csv('sentiments_merged.csv', parse_dates=["date"])
 data = pd.read_csv('dax_2019-2024.csv', parse_dates=["Date"])
 data.rename(columns={"Date": "date"}, inplace=True)
@@ -40,13 +29,41 @@ df[numeric_columns] = scaler.fit_transform(df[numeric_columns])
 averaged = df.groupby('date').mean()
 print(averaged)
 
-#Sequence data for BiLSTM - CHECK
-def create_sequences(data, seq_length=30):
-    sequences = []
-    for i in range(len(data) - seq_length):
-        seq = data.iloc[i:i+seq_length]
-        sequences.append(seq.values)
-    return np.array(sequences)
+#Sequence data for BiLSTM
+def create_sequences(data, lookback, forecast_horizon):
+    X, y = [], []
+    for i in range(len(data) - lookback - forecast_horizon + 1):
+        X.append(data.iloc[i:i+lookback].values)
+        y.append(data.iloc[i+lookback:i+lookback+forecast_horizon]['Price'].values) 
+    return np.array(X), np.array(y)
 
-sequences = create_sequences(averaged)
-print(sequences)
+lookback = 60
+forecast_horizon = 30  
+X, y = create_sequences(averaged, lookback, forecast_horizon)
+
+train_size = int(0.8 * len(X))
+X_train, X_test = X[:train_size], X[train_size:]
+y_train, y_test = y[:train_size], y[train_size:]
+
+#Create BiLSTM
+model = Sequential([
+    Bidirectional(LSTM(128, return_sequences=True), input_shape=(lookback, X.shape[2])),
+    Dropout(0.2),
+    Bidirectional(LSTM(64)),
+    Dropout(0.2),
+    Dense(forecast_horizon)
+])
+
+model.compile(optimizer='adam', loss='mean_squared_error')
+
+#Train
+history = model.fit(
+    X_train, y_train,
+    epochs=20,
+    batch_size=32,
+    validation_split=0.2
+)
+
+#Test
+loss = model.evaluate(X_test, y_test)
+print("Test Loss:", loss)
