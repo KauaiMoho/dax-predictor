@@ -1,8 +1,9 @@
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler
 from keras.models import Sequential
 from keras.layers import LSTM, Bidirectional, Dense, Dropout
+import matplotlib.pyplot as plt
 
 from tensorflow.python.client import device_lib
 print(device_lib.list_local_devices())
@@ -13,6 +14,7 @@ data.rename(columns={"Date": "date"}, inplace=True)
 
 df = pd.merge(data, sentiment, on='date')
 df.drop(['Change %', 'title'], axis=1, inplace=True)
+df.dropna(inplace=True, subset=['Vol.'], ignore_index=True)
 
 df["Price"] = df["Price"].str.replace(",", "").astype(float)
 df["Open"] = df["Open"].str.replace(",", "").astype(float)
@@ -20,14 +22,13 @@ df["High"] = df["High"].str.replace(",", "").astype(float)
 df["Low"] = df["Low"].str.replace(",", "").astype(float)
 df["Vol."] = df["Vol."].str.replace(",", "").str.replace("M", "").astype(float)*1000000
 
-#Normalization using Z-score
-scaler = StandardScaler()
+#Normalization using Min/Max
+scaler = MinMaxScaler()
 numeric_columns = ['Price', 'Open', 'High', 'Low', "Vol."]
 df[numeric_columns] = scaler.fit_transform(df[numeric_columns])
 
 #Averaging of repeated sentiments
 averaged = df.groupby('date').mean()
-print(averaged)
 
 #Sequence data for BiLSTM
 def create_sequences(data, lookback, forecast_horizon):
@@ -41,7 +42,7 @@ lookback = 60
 forecast_horizon = 30  
 X, y = create_sequences(averaged, lookback, forecast_horizon)
 
-train_size = int(0.8 * len(X))
+train_size = int(0.8 * len(X)) #80-20 Split
 X_train, X_test = X[:train_size], X[train_size:]
 y_train, y_test = y[:train_size], y[train_size:]
 
@@ -53,7 +54,6 @@ model = Sequential([
     Dropout(0.2),
     Dense(forecast_horizon)
 ])
-
 model.compile(optimizer='adam', loss='mean_squared_error')
 
 #Train
@@ -67,3 +67,9 @@ history = model.fit(
 #Test
 loss = model.evaluate(X_test, y_test)
 print("Test Loss:", loss)
+
+y_pred = model.predict(X_test)
+plt.plot(range(forecast_horizon), y_test[0], label='True Prices')
+plt.plot(range(forecast_horizon), y_pred[0], label='Predicted Prices')
+plt.legend()
+plt.show()
