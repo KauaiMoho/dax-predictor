@@ -1,0 +1,15 @@
+Ticker,Date,Open,Close,Daily Change (%)
+SMMT,2022-12-06,"Ticker
+SMMT    1.32
+Name: 2022-12-06 00:00:00, dtype: float64","Ticker
+SMMT    2.31
+Name: 2022-12-06 00:00:00, dtype: float64","Ticker
+    74.999989
+Name: 2022-12-06 00:00:00, dtype: float64"
+SRRK,2020-10-27,"Ticker
+SRRK    17.25
+Name: 2020-10-27 00:00:00, dtype: float64","Ticker
+SRRK    30.02
+Name: 2020-10-27 00:00:00, dtype: float64","Ticker
+    74.028988
+Name: 2020-10-27 00:00:00, dtype: float64"
