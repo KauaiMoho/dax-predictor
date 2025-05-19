@@ -5,9 +5,6 @@ from keras.models import Sequential
 from keras.layers import LSTM, Bidirectional, Dense, Dropout
 import matplotlib.pyplot as plt
 
-from tensorflow.python.client import device_lib
-print(device_lib.list_local_devices())
-
 sentiment = pd.read_csv('sentiments_merged.csv', parse_dates=["date"])
 data = pd.read_csv('dax_2019-2024.csv', parse_dates=["Date"])
 data.rename(columns={"Date": "date"}, inplace=True)
@@ -38,7 +35,7 @@ def create_sequences(data, lookback, forecast_horizon):
         y.append(data.iloc[i+lookback:i+lookback+forecast_horizon]['Price'].values) 
     return np.array(X), np.array(y)
 
-lookback = 60
+lookback = 120
 forecast_horizon = 30  
 X, y = create_sequences(averaged, lookback, forecast_horizon)
 
@@ -54,7 +51,7 @@ model = Sequential([
     Dropout(0.2),
     Dense(forecast_horizon)
 ])
-model.compile(optimizer='adam', loss='mean_squared_error')
+model.compile(optimizer='adam', loss='mean_squared_error',  metrics=['accuracy'])
 
 #Train
 history = model.fit(
@@ -69,7 +66,7 @@ loss = model.evaluate(X_test, y_test)
 print("Test Loss:", loss)
 
 y_pred = model.predict(X_test)
-plt.plot(range(forecast_horizon), y_test[0], label='True Prices')
-plt.plot(range(forecast_horizon), y_pred[0], label='Predicted Prices')
+plt.plot(range(forecast_horizon), y_test[0], label='True')
+plt.plot(range(forecast_horizon), y_pred[0], label='Predicted')
 plt.legend()
 plt.show()
